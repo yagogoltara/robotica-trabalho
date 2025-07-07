@@ -2,3 +2,4 @@ opencv-python==4.11.0.86
 sounddevice==0.5.2
 soundfile==0.13.1
 SpeechRecognition==3.14.3
+noisereduce==3.0.3
