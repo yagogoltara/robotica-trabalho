@@ -48,7 +48,7 @@ def audio_consumer(q: queue.Queue, stop_event: threading.Event, fs: int):
 
 def main():
     # --- Parâmetros da Aplicação ---
-    AUDIO_DURATION = 5.0
+    AUDIO_DURATION = 3.0
     SAMPLE_RATE = 44100
     RECT_COLOR, TEXT_COLOR = (255, 0, 0), (0, 255, 0)
     FONT, FONT_SCALE, FONT_THICKNESS = cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2
