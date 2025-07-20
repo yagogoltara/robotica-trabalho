@@ -1,107 +1,134 @@
-# Documentação do Projeto de Captura de Rosto e Áudio
+# Documentação do Projeto de Processamento de Áudio e Vídeo
 
-Este documento descreve as **bibliotecas** utilizadas e a **estrutura** do código, detalhando o propósito de cada componente.
+Este documento descreve a estrutura e funcionalidades do sistema de processamento de áudio e vídeo para detecção de rostos e transcrição de fala.
 
----
+## Estrutura do Projeto
 
-## Bibliotecas Utilizadas
+```
+.
+├── application.py      # Classe principal da aplicação
+├── audio_processor.py # Processamento de áudio e transcrição
+├── face_detector.py   # Detecção e manipulação de rostos
+├── main.py            # Script principal (legado)
+├── video_processor.py # Processamento de vídeo e captura de frames
+├── requirements.txt   # Dependências do projeto
+└── setup.sh           # Script de configuração
+```
 
-- **OpenCV (`cv2`)**
-  - Processamento de vídeo e detecção de rostos em tempo real.
-  - Utiliza o classificador Haar Cascade (`haarcascade_frontalface_default.xml`) para localizar faces no frame capturado pela webcam.
+## Módulos
 
-- **sounddevice**
-  - Captura e reprodução de áudio a partir do microfone.
-  - Fornece a função `sd.rec()` para gravação de blocos de áudio e `sd.play()` para reprodução.
+### application.py
 
-- **speech_recognition (`sr`)**
-  - Conversão de áudio em texto (Speech-to-Text) usando serviços como o Google Web Speech API.
-  - Classe `Recognizer` para processar `AudioData` e método `recognize_google()` para obter transcrições.
+Classe principal que orquestra a aplicação, integrando os módulos de áudio e vídeo.
 
-- **numpy**
-  - Manipulação eficiente de arrays numéricos.
-  - Conversão entre tipos de dados (`int16` ↔️ `float32`) para processamento de áudio.
+**Classe Principal**: `Application`
+- `__init__(camera_index=0, sample_rate=44100, audio_duration=3.0)`: Inicializa a aplicação com os parâmetros fornecidos.
+- `run()`: Inicia o loop principal da aplicação.
+- `cleanup()`: Libera recursos e encerra a aplicação.
 
-- **noisereduce (`nr`)**
-  - Redução de ruído de fundo em gravações de áudio.
-  - Função `nr.reduce_noise()` aplica algoritmos de supressão de ruído em tempo real.
+**Fluxo de Execução**:
+1. Inicializa processadores de áudio e vídeo
+2. Configura detector de rostos
+3. Inicia threads de processamento de áudio
+4. Executa loop principal de captura de vídeo
+5. Gerencia eventos de teclado para captura de rostos
 
-- **threading**
-  - Criação de threads independentes para gravação/processamento de áudio e loop principal da aplicação.
-  - Permite rodar captura de áudio sem bloquear a interface de vídeo.
+### audio_processor.py
 
-- **queue**
-  - Comunicação segura entre threads.
-  - Armazena blocos de áudio processados para consumo posterior pela thread responsável pela transcrição.
+Responsável pelo processamento de áudio e transcrição de fala.
 
----
+**Classe Principal**: `AudioProcessor`
+- `__init__(sample_rate=44100, audio_duration=3.0, queue_size=5)`: Configura o processador de áudio.
+- `record_audio()`: Grava áudio com redução de ruído e coloca na fila.
+- `transcribe_audio()`: Transcreve áudio da fila usando reconhecimento de fala.
+- `start_processing()`: Inicia as threads de gravação e transcrição.
+- `stop_processing()`: Para o processamento e limpa recursos.
 
-## Estrutura do Código
+**Funcionalidades**:
+- Gravação de áudio em tempo real
+- Redução de ruído
+- Transcrição de fala usando Google Speech Recognition
+- Processamento assíncrono com fila de áudio
 
-O código está organizado em **três partes principais**:
+### face_detector.py
 
-1. **Funções de Áudio** (`audio_producer` e `audio_consumer`)  
-2. **Função Principal** (`main`)  
-3. **Configurações de Parâmetros** (constantes e inicialização)  
+Implementa a detecção e manipulação de rostos em imagens.
 
-### 1. `audio_producer(q, stop_event, duration, fs)`
+**Classe Principal**: `FaceDetector`
+- `__init__(scale_factor=1.1, min_neighbors=5, min_size=(30, 30))`: Configura o detector de rostos.
+- `detect_faces(frame)`: Detecta rostos em um frame de vídeo.
+- `draw_face_rectangles(frame, faces, color, thickness)`: Desenha retângulos ao redor dos rostos.
+- `draw_face_coordinates(frame, faces, color, font_scale, thickness)`: Adiciona coordenadas dos rostos.
+- `extract_face(frame, face_rect)`: Extrai a região de um rosto da imagem.
 
-- **Objetivo**: Gravar blocos de áudio, aplicar redução de ruído e inserir dados limpos em uma fila.  
-- **Parâmetros**:
-  - `q` (`queue.Queue`): fila para enviar áudio processado.  
-  - `stop_event` (`threading.Event`): sinaliza quando parar o loop.  
-  - `duration` (`float`): duração de cada bloco de gravação em segundos.  
-  - `fs` (`int`): taxa de amostragem (samples por segundo).  
+**Características**:
+- Baseado no classificador Haar Cascade
+- Suporte a múltiplos rostos
+- Métodos auxiliares para visualização
 
-- **Fluxo**:
-  1. Chama `sd.rec()` para gravar por `duration` segundos.  
-  2. Converte o buffer `int16` para `float32` e normaliza.  
-  3. Aplica `nr.reduce_noise()` para remover ruído de fundo (parâmetro `prop_decrease` ajusta intensidade).  
-  4. Reconverte o resultado para `int16` e coloca na fila `q`.  
+### video_processor.py
 
-### 2. `audio_consumer(q, stop_event, fs)`
+Gerencia a captura e processamento de vídeo da webcam.
 
-- **Objetivo**: Consumir blocos de áudio da fila e transcrever em texto.  
-- **Parâmetros**:
-  - `q` (`queue.Queue`): fila contendo blocos de áudio limpos.  
-  - `stop_event` (`threading.Event`): sinaliza término da aplicação.  
-  - `fs` (`int`): taxa de amostragem usada para criar `AudioData`.  
+**Classe Principal**: `VideoProcessor`
+- `__init__(camera_index=0, window_name="Webcam")`: Inicializa o processador de vídeo.
+- `initialize_camera()`: Inicializa a câmera.
+- `set_face_detector(face_detector)`: Configura o detector de rostos.
+- `get_frame()`: Captura um frame da câmera.
+- `process_frame(frame)`: Processa um frame (detecta rostos).
+- `show_frame(frame)`: Exibe um frame na janela.
+- `capture_face(frame, output_path)`: Salva um rosto detectado.
+- `release()`: Libera os recursos da câmera.
 
-- **Fluxo**:
-  1. Retira dados de áudio da fila (`q.get()`).  
-  2. Cria um objeto `sr.AudioData` a partir do buffer de bytes.  
-  3. Chama `recognizer.recognize_google()` para obter transcrição em português.  
-  4. Imprime o texto reconhecido no console.  
+**Funcionalidades**:
+- Captura de vídeo em tempo real
+- Integração com detector de rostos
+- Exibição de frames processados
+- Captura e salvamento de rostos
 
-### 3. `main()`
+### main.py (Legado)
 
-- **Objetivo**: Inicializar a aplicação, threads e loop de vídeo.  
+Script original que implementa a funcionalidade básica de forma procedural.
 
-- **Etapas**:
-  1. Define constantes de áudio (`DURATION`, `FS`) e cores/fontes para a interface.  
-  2. Cria `audio_queue` e `stop_event`.  
-  3. Inicia as threads:
-     - **Produtor**: captura e processa áudio.  
-     - **Consumidor**: transcreve áudio processado.  
-  4. Inicializa o detector de faces com OpenCV e abre a webcam.  
-  5. Loop principal de vídeo:
-     - Captura frames da câmera.  
-     - Converte para escala de cinza e detecta faces.  
-     - Desenha retângulos e coordenadas (X, Y) sobre cada face.  
-     - Exibe janela com o feed ao vivo.  
-     - Captura tecla:
-       - **`c`**: captura e salva imagem da primeira face detectada.  
-       - **`q`**: encerra o loop.  
-  6. No bloco `finally`, sinaliza parada (`stop_event.set()`), aguarda término das threads e libera recursos (webcam, janelas).  
+**Funções Principais**:
+- `audio_producer()`: Grava áudio e aplica redução de ruído.
+- `audio_consumer()`: Transcreve áudio da fila.
+- `main()`: Função principal que gerencia o fluxo do programa.
 
----
+## Requisitos
 
-### Observações
+- Python 3.7+
+- OpenCV
+- NumPy
+- SoundDevice
+- SpeechRecognition
+- Noisereduce
+
+## Instalação
+
+1. Clone o repositório
+2. Instale as dependências:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Execute o script principal:
+   ```bash
+   python application.py
+   ```
+
+## Uso
+
+1. A aplicação iniciará a câmera e o microfone
+2. Rostos detectados serão destacados na tela
+3. Pressione 'c' para capturar o rosto detectado
+4. Pressione 'q' para sair da aplicação
+
+## Observações
+
+- A transcrição de áudio requer conexão com a internet
+- A qualidade da detecção pode variar com a iluminação e ângulo da câmera
+- Arquivos de captura são salvos no diretório 'captures/'
 
 - Ajuste `prop_decrease` em `nr.reduce_noise()` para calibrar a intensidade da redução de ruído.  
 - A divisão em threads garante que a UI da webcam não seja bloqueada pela gravação/transcrição de áudio.  
 - A comunicação via `queue.Queue` torna o pipeline robusto a picos de carga, evitando perda de dados.  
-
----
-
-*Fim da documentação.*  
