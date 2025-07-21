@@ -9,10 +9,9 @@ Este documento descreve a estrutura e funcionalidades do sistema de processament
 ├── application.py      # Classe principal da aplicação
 ├── audio_processor.py # Processamento de áudio e transcrição
 ├── face_detector.py   # Detecção e manipulação de rostos
-├── main.py            # Script principal (legado)
 ├── video_processor.py # Processamento de vídeo e captura de frames
 ├── requirements.txt   # Dependências do projeto
-└── setup.sh           # Script de configuração
+└── setup.sh           # Script de pré-configuração 
 ```
 
 ## Módulos
@@ -86,15 +85,6 @@ Gerencia a captura e processamento de vídeo da webcam.
 - Exibição de frames processados
 - Captura e salvamento de rostos
 
-### main.py (Legado)
-
-Script original que implementa a funcionalidade básica de forma procedural.
-
-**Funções Principais**:
-- `audio_producer()`: Grava áudio e aplica redução de ruído.
-- `audio_consumer()`: Transcreve áudio da fila.
-- `main()`: Função principal que gerencia o fluxo do programa.
-
 ## Requisitos
 
 - Python 3.7+
@@ -109,6 +99,7 @@ Script original que implementa a funcionalidade básica de forma procedural.
 1. Clone o repositório
 2. Instale as dependências:
    ```bash
+   sh setup.sh
    pip install -r requirements.txt
    ```
 3. Execute o script principal:
