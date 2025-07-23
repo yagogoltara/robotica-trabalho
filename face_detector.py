@@ -3,12 +3,12 @@ import numpy as np
 class FaceDetector:
     def __init__(self, scale_factor=1.1, min_neighbors=5, min_size=(30, 30)):
         """
-        Initialize the FaceDetector with detection parameters.
+        Inicializa o FaceDetector com os parâmetros de detecção.
         
         Args:
-            scale_factor (float): Scale factor for image pyramid
-            min_neighbors (int): Minimum neighbors for detection
-            min_size (tuple): Minimum face size (width, height)
+            scale_factor (float): Fator de escala pra pirâmide de imagem
+            min_neighbors (int): Mínimo de vizinhos pra considerar um rosto
+            min_size (tuple): Tamanho mínimo do rosto (largura, altura)
         """
         self.face_cascade = cv2.CascadeClassifier(
             cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
@@ -19,13 +19,13 @@ class FaceDetector:
     
     def detect_faces(self, frame):
         """
-        Detect faces in a given frame.
+        Detecta os rostos no frame que chegar.
         
         Args:
-            frame: Input image in BGR format
+            frame: Imagem em BGR
             
         Returns:
-            list: List of face rectangles (x, y, w, h)
+            list: Lista de retângulos dos rostos (x, y, w, h)
         """
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = self.face_cascade.detectMultiScale(
@@ -39,16 +39,16 @@ class FaceDetector:
     @staticmethod
     def draw_face_rectangles(frame, faces, color=(255, 0, 0), thickness=2):
         """
-        Draw rectangles around detected faces.
+        Desenha os retângulos em volta dos rostos.
         
         Args:
-            frame: Input image
-            faces: List of face rectangles (x, y, w, h)
-            color: Rectangle color (B, G, R)
-            thickness: Rectangle thickness
+            frame: Imagem
+            faces: Lista dos rostos (x, y, w, h)
+            color: Cor do retângulo (B, G, R)
+            thickness: Espessura da linha
             
         Returns:
-            Frame with drawn rectangles
+            Frame com os retângulos desenhados
         """
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y), (x+w, y+h), color, thickness)
@@ -57,17 +57,17 @@ class FaceDetector:
     @staticmethod
     def draw_face_coordinates(frame, faces, color=(0, 255, 0), font_scale=0.6, thickness=2):
         """
-        Draw coordinates of detected faces.
+        Escreve as coordenadas dos rostos na imagem.
         
         Args:
-            frame: Input image
-            faces: List of face rectangles (x, y, w, h)
-            color: Text color (B, G, R)
-            font_scale: Font scale
-            thickness: Text thickness
+            frame: Imagem
+            faces: Lista dos rostos (x, y, w, h)
+            color: Cor do texto (B, G, R)
+            font_scale: Tamanho da fonte
+            thickness: Espessura do texto
             
         Returns:
-            Frame with drawn coordinates
+            Frame com as coordenadas desenhadas
         """
         font = cv2.FONT_HERSHEY_SIMPLEX
         for (x, y, w, h) in faces:
@@ -85,14 +85,14 @@ class FaceDetector:
     @staticmethod
     def extract_face(frame, face_rect):
         """
-        Extract face region from frame.
+        Recorta o rosto do frame.
         
         Args:
-            frame: Input image
-            face_rect: Face rectangle (x, y, w, h)
+            frame: Imagem
+            face_rect: Retângulo do rosto (x, y, w, h)
             
         Returns:
-            Extracted face image or None if invalid rectangle
+            Imagem do rosto ou None se o retângulo for inválido
         """
         x, y, w, h = face_rect
         if x >= 0 and y >= 0 and w > 0 and h > 0:

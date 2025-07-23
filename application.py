@@ -9,12 +9,12 @@ import numpy as np
 class Application:
     def __init__(self, camera_index=0, sample_rate=44100, audio_duration=3.0):
         """
-        Initialize the application with audio and video components.
+        Inicializa a aplicação com os componentes de áudio e vídeo.
         
         Args:
-            camera_index (int): Index of the camera to use
-            sample_rate (int): Audio sample rate in Hz
-            audio_duration (float): Duration of each audio chunk in seconds
+            camera_index (int): Índice da câmera que vai usar
+            sample_rate (int): Taxa de amostragem do áudio em Hz
+            audio_duration (float): Duração de cada trecho de áudio em segundos
         """
         self.audio_processor = AudioProcessor(
             sample_rate=sample_rate,
@@ -34,12 +34,12 @@ class Application:
         self._create_output_dir()
     
     def _create_output_dir(self):
-        """Create output directory for captured faces if it doesn't exist."""
+        """Cria a pasta pra salvar os rostos capturados, se não existir ainda."""
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
     
     def run(self):
-        """Run the main application loop."""
+        """Roda o loop principal da aplicação."""
         if not self.video_processor.initialize_camera():
             print("❌ Não foi possível acessar a webcam")
             return
@@ -49,16 +49,16 @@ class Application:
         
         try:
             while True:
-                # Get and process frame
+                # Pega e processa o frame
                 ret, frame = self.video_processor.get_frame()
                 if not ret:
                     break
                 
-                # Process frame (detect and draw faces)
+                # Processa o frame (detecta e desenha os rostos)
                 processed_frame = self.video_processor.process_frame(frame)
                 self.video_processor.show_frame(processed_frame)
                 
-                # Handle keyboard input
+                # Lida com o teclado
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord('c'):
                     output_path = os.path.join(
@@ -79,14 +79,14 @@ class Application:
             self.cleanup()
     
     def cleanup(self):
-        """Clean up resources."""
+        """Libera os recursos usados."""
         self.audio_processor.stop_processing()
         self.video_processor.release()
         print("Aplicação encerrada com sucesso.")
 
 
 def main():
-    """Main entry point for the application."""
+    """Ponto de entrada principal da aplicação."""
     app = Application()
     app.run()
 

@@ -8,25 +8,25 @@ import noisereduce as nr
 class AudioProcessor:
     def __init__(self, sample_rate=44100, audio_duration=3.0, queue_size=5):
         """
-        Initialize the AudioProcessor with audio settings.
+        Inicializa o AudioProcessor com as configurações de áudio.
         
         Args:
-            sample_rate (int): Audio sample rate in Hz
-            audio_duration (float): Duration of each audio chunk in seconds
-            queue_size (int): Maximum size of the audio processing queue
+            sample_rate (int): Taxa de amostragem do áudio em Hz
+            audio_duration (float): Duração de cada trecho de áudio em segundos
+            queue_size (int): Tamanho máximo da fila de processamento de áudio
         """
         self.sample_rate = sample_rate
         self.audio_duration = audio_duration
         self.queue = queue.Queue(maxsize=queue_size)
         self.stop_event = threading.Event()
         self.recognizer = sr.Recognizer()
-        self.sample_width = 2  # 16-bit audio
+        self.sample_width = 2  # Áudio 16 bits
         
     def record_audio(self):
-        """Record audio with noise reduction and put it in the queue."""
+        """Grava o áudio, reduz o ruído e coloca na fila pra transcrição."""
         print("[Áudio] Iniciando gravação. Fale para transcrição.")
         while not self.stop_event.is_set():
-            # Record audio
+            # Grava o áudio
             audio = sd.rec(
                 int(self.audio_duration * self.sample_rate),
                 samplerate=self.sample_rate,
@@ -35,7 +35,7 @@ class AudioProcessor:
             )
             sd.wait()
             
-            # Apply noise reduction
+            # Faz a redução de ruído
             audio_float = audio.astype(np.float32) / 32767.0
             reduced_noise_audio = nr.reduce_noise(
                 y=audio_float.flatten(),
@@ -44,14 +44,14 @@ class AudioProcessor:
             )
             audio_clean = (reduced_noise_audio * 32767.0).astype(np.int16)
             
-            # Put in queue if not full
+            # Coloca na fila se não estiver cheia
             try:
                 self.queue.put(audio_clean.copy(), timeout=0.5)
             except queue.Full:
                 print("[Áudio] Fila cheia, descartando amostra de áudio")
     
     def transcribe_audio(self):
-        """Transcribe audio from the queue using Google's speech recognition."""
+        """Pega o áudio da fila e tenta transcrever usando o Google."""
         while not (self.stop_event.is_set() and self.queue.empty()):
             try:
                 audio = self.queue.get(timeout=0.5)
@@ -74,7 +74,7 @@ class AudioProcessor:
                 continue
     
     def start_processing(self):
-        """Start audio processing threads."""
+        """Inicia as threads de gravação e transcrição de áudio."""
         self.recording_thread = threading.Thread(
             target=self.record_audio,
             daemon=True
@@ -88,7 +88,7 @@ class AudioProcessor:
         self.transcription_thread.start()
     
     def stop_processing(self):
-        """Stop audio processing and clean up resources."""
+        """Para o processamento de áudio e libera tudo."""
         self.stop_event.set()
         if hasattr(self, 'recording_thread'):
             self.recording_thread.join(timeout=1)

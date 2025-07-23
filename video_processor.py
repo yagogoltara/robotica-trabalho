@@ -4,11 +4,11 @@ import numpy as np
 class VideoProcessor:
     def __init__(self, camera_index=0, window_name="Webcam"):
         """
-        Initialize the VideoProcessor with camera settings.
+        Inicializa o VideoProcessor com as configs da câmera.
         
         Args:
-            camera_index (int): Index of the camera to use
-            window_name (str): Name of the display window
+            camera_index (int): Índice da câmera que vai usar
+            window_name (str): Nome da janela que vai aparecer
         """
         self.camera_index = camera_index
         self.window_name = window_name
@@ -17,29 +17,29 @@ class VideoProcessor:
     
     def initialize_camera(self) -> bool:
         """
-        Initialize the camera capture.
+        Inicializa a captura da câmera.
         
         Returns:
-            bool: True if camera was initialized successfully, False otherwise
+            bool: True se conseguiu abrir a câmera, False se deu ruim
         """
         self.cap = cv2.VideoCapture(self.camera_index)
         return self.cap.isOpened()
     
     def set_face_detector(self, face_detector):
         """
-        Set the face detector to use for face detection.
+        Define qual detector de rosto vai usar.
         
         Args:
-            face_detector: Instance of FaceDetector
+            face_detector: Instância do FaceDetector
         """
         self.face_detector = face_detector
     
     def get_frame(self) -> Tuple[bool, Optional[np.ndarray]]:
         """
-        Get the next frame from the camera.
+        Pega o próximo frame da câmera.
         
         Returns:
-            tuple: (success, frame) where success is a boolean and frame is the captured image
+            tuple: (sucesso, frame) onde sucesso é bool e frame é a imagem
         """
         if not self.cap or not self.cap.isOpened():
             return False, None
@@ -49,13 +49,13 @@ class VideoProcessor:
     
     def process_frame(self, frame: np.ndarray) -> np.ndarray:
         """
-        Process a single frame (detect faces and draw them).
+        Processa um frame (detecta e desenha os rostos).
         
         Args:
-            frame: Input frame to process
+            frame: Frame que vai ser processado
             
         Returns:
-            Processed frame with face detection
+            Frame processado com os rostos desenhados
         """
         if self.face_detector:
             faces = self.face_detector.detect_faces(frame)
@@ -66,23 +66,23 @@ class VideoProcessor:
     
     def show_frame(self, frame: np.ndarray):
         """
-        Display a frame in the window.
+        Mostra o frame na janela.
         
         Args:
-            frame: Frame to display
+            frame: Frame que vai aparecer
         """
         cv2.imshow(self.window_name, frame)
     
     def capture_face(self, frame: np.ndarray, output_path: str) -> bool:
         """
-        Capture and save the first detected face in the frame.
+        Salva o primeiro rosto detectado no frame.
         
         Args:
-            frame: Input frame containing faces
-            output_path: Path to save the captured face
+            frame: Frame que tem os rostos
+            output_path: Caminho pra salvar o rosto
             
         Returns:
-            bool: True if face was captured and saved, False otherwise
+            bool: True se salvou o rosto, False se não achou nada
         """
         if not self.face_detector:
             return False
@@ -98,7 +98,7 @@ class VideoProcessor:
         return False
     
     def release(self):
-        """Release camera resources and close windows."""
+        """Libera a câmera e fecha as janelas."""
         if self.cap and self.cap.isOpened():
             self.cap.release()
         cv2.destroyAllWindows()
